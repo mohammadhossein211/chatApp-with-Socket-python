@@ -104,10 +104,49 @@ def main():
                     "error": ""
                 }
             serverSocket.send(pickle.dumps(x))
-        # serverSocket.send(
-        #     bytes("Message from server: Hello from server!", "utf-8"))
+        elif(data["for"] == "sendMessage"):
+            messageTime = sendMessage(
+                data["data"]["userId"], data["data"]["toUserId"], data["data"]["text"])
+            if(messageTime):
+                x = {
+                    "for": "sendMessage",
+                    "answer": "True",
+                    "data": {
+                        "time": messageTime
+                    },
+                    "error": ""
+                }
+                serverSocket.send(pickle.dumps(x))
+            # serverSocket.send(
+            #     bytes("Message from server: Hello from server!", "utf-8"))
 
     s.close()
+
+
+def sendMessage(userId, toUserId, text):
+    messageId = 0
+    try:
+        mycursor = mydb.cursor()
+        sql = f"insert into messages (userId,toUserId,text) values ({userId},{toUserId},'{text}')"
+        mycursor.execute(sql)
+        mydb.commit()
+        messageId = mycursor.lastrowid
+        print("message sent with id: ", messageId)
+    except mysql.connector.Error as err:
+        print("Something went wrong: {}".format(err))
+        return False
+    try:
+        mycursor = mydb.cursor()
+        sql = f"select time from messages where id={messageId}"
+        mycursor.execute(sql)
+        for x in mycursor:
+            return x[0]
+        messageId = mycursor.lastrowid
+        print("message sent with id: ", messageId)
+    except mysql.connector.Error as err:
+        print("Something went wrong: {}".format(err))
+        return False
+    return False
 
 
 def getNameOfUser(userId):
@@ -155,41 +194,58 @@ def openChat(userId, toUserId):
 
 def getChats(userId):
     userId_list = []
+    tempUserIdList = []
+    messages = []
     try:
         mycursor = mydb.cursor()
-        sql = f"SELECT userId from messages where userId={userId} or toUserId={userId} group by userId;"
+        sql = f"SELECT userId,toUserId from messages where userId={userId} or toUserId={userId} order by time desc"
         mycursor.execute(sql)
         for x in mycursor:
             if x[0] != userId and x[0] not in userId_list:
                 userId_list.append(x[0])
+            if x[1] != userId and x[1] not in userId_list:
+                userId_list.append(x[1])
+                # tempUserIdList.append(x[0])
+                # messages.append({"userId": x[0], "time": x[1]})
         # print("New user registered with id: ", mycursor.lastrowid)
     except mysql.connector.Error as err:
         print("Something went wrong: {}".format(err))
-    try:
-        mycursor = mydb.cursor()
-        sql = f"SELECT toUserId from messages where userId={userId} or toUserId={userId} group by toUserId;"
-        mycursor.execute(sql)
-        for x in mycursor:
-            if x[0] != userId and x[0] not in userId_list:
-                userId_list.append(x[0])
-        # print("New user registered with id: ", mycursor.lastrowid)
-    except mysql.connector.Error as err:
-        print("Something went wrong: {}".format(err))
+    # try:
+    #     mycursor = mydb.cursor()
+    #     sql = f"SELECT toUserId,time from messages where userId={userId} or toUserId={userId} order by time desc"
+    #     mycursor.execute(sql)
+    #     for x in mycursor:
+    #         if x[0] != userId and x[0] not in tempUserIdList:
+    #             tempUserIdList.append(x[0])
+    #             messages.append({"userId": x[0], "time": x[1]})
+    #     # print("New user registered with id: ", mycursor.lastrowid)
+    # except mysql.connector.Error as err:
+    #     print("Something went wrong: {}".format(err))
+
+    # n = len(messages)
+
+    # for i in range(n-1):
+    #     for j in range(0, n-i-1):
+    #         if messages[j]["time"] < messages[j+1]["time"]:
+    #             messages[j], messages[j +
+    #                                   1] = messages[j+1], messages[j]
+
+    # for i in range(len(messages)):
+    #     userId_list.append(messages[i]["userId"])
+
     chat_list = []
     if len(userId_list) != 0:
-        val = '('
         for i in range(len(userId_list)):
-            val = f"{val}{userId_list[i]},"
-        val = val[:-1]+")"
-        try:
-            mycursor = mydb.cursor()
-            sql = f"SELECT id,name FROM chat_v1.users where id in {val}"
-            mycursor.execute(sql)
-            for x in mycursor:
-                chat_list.append({"userId": x[0], "name": x[1]})
-            # print("New user registered with id: ", mycursor.lastrowid)
-        except mysql.connector.Error as err:
-            print("Something went wrong: {}".format(err))
+            try:
+                mycursor = mydb.cursor()
+                sql = f"SELECT id,name FROM chat_v1.users where id={userId_list[i]}"
+                mycursor.execute(sql)
+                for x in mycursor:
+                    chat_list.append({"userId": x[0], "name": x[1]})
+                    break
+                # print("New user registered with id: ", mycursor.lastrowid)
+            except mysql.connector.Error as err:
+                print("Something went wrong: {}".format(err))
 
     return chat_list
 
