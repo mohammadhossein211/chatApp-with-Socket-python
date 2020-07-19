@@ -2,7 +2,8 @@ import socket
 import pickle
 import sys
 from PyQt5.QtWidgets import *
-from windows.chat import *
+import windows.chat as chatFile
+import sendMsg
 
 
 f = open("port.txt", "r")
@@ -12,11 +13,13 @@ port = int(f.read())
 class Main(QWidget):
     def __init__(self, userId):
         super().__init__()
-        self.setGeometry(100, 100, 300, 450)
+        self.setGeometry(100, 100, 400, 550)
         # self.setWindowTitle("Hi, ".data["data"][""])
+        self.isInSearch = False
         self.UI(userId)
 
     def UI(self, userId):
+        self.searchUsers = []
         x = {
             "for": "getChats",
             "data":
@@ -24,18 +27,15 @@ class Main(QWidget):
                 "userId": userId
             }
         }
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("localhost", port))
-        send = pickle.dumps(x)
-        s.send(send)
-        msg = s.recv(2048)
-        s.close()
-        dataRes = pickle.loads(msg)
-        self.chatList = dataRes["data"]["chatListNames"]
+
+        dataRes = sendMsg.sendData(x)
+
+        self.chatList = dataRes["data"]["users"]
+        self.savedUsers = self.chatList
         chatListNames = []
 
-        for i in range(len(self.chatList)):
-            chatListNames.append(self.chatList[i]["name"])
+        for user in self.chatList:
+            chatListNames.append(user["name"])
 
         name = dataRes["data"]["name"]
         self.setWindowTitle(f"Hi, {name}")
@@ -45,6 +45,18 @@ class Main(QWidget):
         self.namesListWidget.itemClicked.connect(self.openChat)
 
         formLayout = QFormLayout()
+
+        self.searchInput = QLineEdit()
+        self.searchBtn = QPushButton("search")
+        self.searchBtn.clicked.connect(self.searchUser)
+        self.allUsersBtn = QPushButton("Show all my chatss")
+        self.allUsersBtn.clicked.connect(self.backToAllUsers)
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(self.searchInput)
+        hbox.addWidget(self.searchBtn)
+        hbox.addWidget(self.allUsersBtn)
+        formLayout.addRow(hbox)
         formLayout.addRow(self.namesListWidget)
 
         self.setLayout(formLayout)
@@ -53,9 +65,46 @@ class Main(QWidget):
 
     def openChat(self, item):
         print(f"item {self.namesListWidget.currentRow()}.{item.text()} clicked!")
-        toUserId = self.chatList[self.namesListWidget.currentRow()]["userId"]
-        self.chatWindow = Chat(self.userId, toUserId, item.text())
+        id = self.namesListWidget.currentRow()
+        toUserId = self.chatList[id]["userId"]
+        self.chatWindow = chatFile.Chat(self.userId, toUserId, item.text())
+        if self.isInSearch:
+            user = self.chatList[id]
+            self.savedUsers.append(user)
+            self.namesListWidget.addItem(user["name"])
+            self.chatList = []
+            self.chatList.append(user)
         self.hide()
+
+    def searchUser(self):
+        if (self.searchInput.text() != ""):
+            x = {
+                "for": "searchUsers",
+                "data": {
+                    "txt": self.searchInput.text(),
+                    "userId": self.userId
+                }
+            }
+            dataRes = sendMsg.sendData(x)
+            if(dataRes["answer"][0].lower() == "t"):
+                self.chatList = dataRes["data"]["users"]
+                self.isInSearch = True
+                self.namesListWidget.clear()
+                self.chatList.clear
+                for user in self.chatList:
+                    self.namesListWidget.addItem(user["name"])
+
+        else:
+            print("")
+
+    def backToAllUsers(self):
+        self.searchInput.setText("")
+        self.namesListWidget.clear()
+        chatListNames = []
+        for user in self.savedUsers:
+            chatListNames.append(user["name"])
+        self.chatList = self.savedUsers
+        self.namesListWidget.addItems(chatListNames)
 
 
 def opneMainWindow():
