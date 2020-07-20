@@ -5,13 +5,13 @@ def openChat(userId, toUserId, lastMsgId):
     mydb = mysql.connector.connect(
         host="localhost",
         user="root",
-        password="m1121212",
+        password="1212",
         database="chat_v1"
     )
     messages = []
     try:
 
-        sql = f"SELECT userId,toUserId,text,time,id from messages where ((userId={userId} and toUserId={toUserId}) or (userId={toUserId} and toUserId={userId})) and id>{lastMsgId} order by messages.time limit 0,50"
+        sql = f"SELECT userId,toUserId,text,time,id from messages where ((userId={userId} and toUserId={toUserId}) or (userId={toUserId} and toUserId={userId})) and id>{lastMsgId} order by messages.time"
         mycursor = mydb.cursor()
         mycursor.execute(sql)
         myresult = mycursor.fetchall()

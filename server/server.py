@@ -15,22 +15,22 @@ port = int(f.read())
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="m1121212",
+    password="1212",
     database="chat_v1"
 )
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(("", port))
-s.listen(5)
+s.listen(500)
 
-clients_socket = []
+
 
 
 def main():
     while True:
         serverSocket, address = s.accept()
 
-        msg = serverSocket.recv(1024)
+        msg = serverSocket.recv(10000)
         data = pickle.loads(msg)
         print(data["data"])
         x = {
@@ -62,10 +62,10 @@ def main():
                     },
                     "error": result["error"]
                 }
+        
         elif(data["for"] == "login"):
             userId = login(data["data"])
             if(userId):
-                # chats_list_names = getChats(userId)
                 x = {
                     "for": "login",
                     "answer": "True",
@@ -75,9 +75,6 @@ def main():
                     "error": ""
                 }
 
-                clients_socket.append(
-                    {"s": serverSocket, "userId": userId})
-
         elif(data["for"] == "getChats"):
             userId = data["data"]["userId"]
             users = getChats(userId)
@@ -86,8 +83,8 @@ def main():
                 mycursor = mydb.cursor()
                 sql = f"SELECT name FROM users where id={userId}"
                 mycursor.execute(sql)
-                for x in mycursor:
-                    name = x[0]
+                for user in mycursor:
+                    name = user[0]
                     break
                 # print("New user registered with id: ", mycursor.lastrowid)
             except mysql.connector.Error as err:
@@ -95,6 +92,7 @@ def main():
 
             x = {
                 "for": "getChats",
+                "asnwer": "True",
                 "data": {
                     "users": users,
                     "name": name
@@ -107,12 +105,14 @@ def main():
                                 data["data"]["toUserId"], 0)
             x = {
                 "for": "openChat",
+                "answer": "True",
                 "data": {
                     "messages": messages,
                     "toName": getNameOfUser(data["data"]["toUserId"])
                 },
                 "error": ""
             }
+        
         elif(data["for"] == "sendMessage"):
             message = sendMsg.sendMessage(
                 data["data"]["userId"], data["data"]["toUserId"], data["data"]["text"])
@@ -126,6 +126,7 @@ def main():
                     },
                     "error": ""
                 }
+        
         elif(data["for"] == "refreshChat"):
             messages = openChat(data["data"]["userId"],
                                 data["data"]["toUserId"],
@@ -154,19 +155,7 @@ def main():
     s.close()
 
 
-def clientsAdd(userId, serverSocket):
-    num = 0
-    isAdded = False
-    for i in range(0, len(clients_socket)):
-        if userId == clients_socket[i]["userId"]:
-            isAdded = True
-            num = i
-            clients_socket[i]["s"] = serverSocket
-    if not isAdded:
-        clients_socket.append(
-            {"s": serverSocket, "userId": userId})
-        num = -1
-    return num
+
 
 
 def getNameOfUser(userId):

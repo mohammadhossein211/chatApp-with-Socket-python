@@ -2,7 +2,7 @@ import mysql.connector
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="m1121212",
+    password="1212",
     database="chat_v1"
 )
 
@@ -12,11 +12,10 @@ def login(data):
     try:
         mycursor = mydb.cursor()
         y = data["username"]
-        sql = f"SELECT id,name,username,password FROM users where username='{y}'"
-        val = (data["username"])
+        sql = f"SELECT id,password FROM users where username='{y}'"
         mycursor.execute(sql)
         for x in mycursor:
-            if x[3] == data["password"]:
+            if x[1] == data["password"]:
                 userId = x[0]
                 break
         # print("New user registered with id: ", mycursor.lastrowid)

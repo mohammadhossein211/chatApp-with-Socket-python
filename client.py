@@ -44,7 +44,7 @@ class Home(QWidget):
         self.loginErrorLabel.setStyleSheet(style)
 
         self.login_username_input = QLineEdit()
-        self.login_username_input.setText("hossein")
+        self.login_username_input.setText("maryam")
         self.login_password_input = QLineEdit()
         self.login_password_input.setText("1234")
         self.loginBtn = QPushButton("Login")
@@ -59,7 +59,7 @@ class Home(QWidget):
         formLayout.addRow(self.errorTxt)
 
         self.setLayout(formLayout)
-        self.setWindowTitle("Chats")
+        self.setWindowTitle("Home")
         self.show()
 
     def chats(self, userId):
@@ -79,12 +79,8 @@ class Home(QWidget):
             }
 
             dataRes = sendMsg.sendData(x)
-            if(dataRes["for"] == "register"):
-                if(dataRes["answer"] == "True"):
-                    # self.hide()
-                    self.chats(dataRes["data"]["userId"])
-                else:
-                    self.errorTxt.text = dataRes["error"]
+            if(dataRes["answer"] == "True"):
+                self.chats(dataRes["data"]["userId"])
         else:
             self.registerErrorLabel.setText(
                 "Please fill all 3 inputs below with at least 3 char")
@@ -116,26 +112,3 @@ def registerAndLoginWindow():
 
 if __name__ == "__main__":
     registerAndLoginWindow()
-
-# while True:
-#     full_msg = b''
-#     new_msg = True
-#     while True:
-#         msg = s.recv(16)
-#         if new_msg:
-#             print("new msg len:", msg[:HEADERSIZE])
-#             msglen = int(msg[:HEADERSIZE])
-#             new_msg = False
-
-#         print(f"full message length: {msglen}")
-
-#         full_msg += msg
-
-#         print(len(full_msg))
-
-#         if len(full_msg)-HEADERSIZE == msglen:
-#             print("full msg recvd")
-#             print(full_msg[HEADERSIZE:])
-#             print(pickle.loads(full_msg[HEADERSIZE:]))
-#             new_msg = True
-#             full_msg = b""

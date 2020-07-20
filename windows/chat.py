@@ -40,25 +40,13 @@ class Chat(QWidget):
             self.toName = dataRes['data']['toName']
         except:
             pass
-        self.setWindowTitle(f"{toName}'s Chat")
+        self.setWindowTitle(f"{self.toName}'s Chat")
 
         self.messagesListWidget = QListWidget(self)
         self.messagesListWidget.itemClicked.connect(self.messageClicked)
 
         self.setChat(dataRes["data"])
 
-        # self.chatList = dataRes["data"]["chatListNames"]
-        # chatListNames = []
-
-        # for i in range(len(self.chatList)):
-        #     chatListNames.append(self.chatList[i]["name"])
-
-        # name = dataRes["data"]["name"]
-        # self.setWindowTitle(f"Hi, {name}")
-
-        # self.namesListWidget = QListWidget(self)
-        # self.namesListWidget.addItems(chatListNames)
-        # self.namesListWidget.itemClicked.connect(self.openChat)
 
         formLayout = QFormLayout()
         backBtn = QPushButton("Back")
@@ -88,6 +76,7 @@ class Chat(QWidget):
         self.mainWindow = mainFile.Main(userId)
 
     def sendMessage(self):
+        self.refreshChat()
         if (self.message_input.text() != ""):
             x = {
                 "for": "sendMessage",
@@ -133,13 +122,10 @@ class Chat(QWidget):
                 text = messagesList[i]["text"]
                 time = str(messagesList[i]["time"])
                 user = "you"
-                # brush = QBrush()
                 color = QColor("#ffffff")
-                # color.setHsv(0, 0, 100)
                 if(messagesList[i]["isSent"] == "False"):
                     user = self.toName
                     color = QColor("#ddd")
-                # brush.setColor(color)
                 self.messagesTextList.append(f"{user}: {text}\n{time[11:-3]}")
                 item = QListWidgetItem()
                 item.setText(self.messagesTextList[-1])

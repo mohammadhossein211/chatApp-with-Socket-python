@@ -7,7 +7,7 @@ def sendMessage(userId, toUserId, text):
         mydb = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="m1121212",
+            password="1212",
             database="chat_v1"
         )
         mycursor = mydb.cursor()
@@ -20,11 +20,13 @@ def sendMessage(userId, toUserId, text):
     except mysql.connector.Error as err:
         print("Something went wrong: {}".format(err))
         return False
+
+
     try:
         mydb = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="m1121212",
+            password="1212",
             database="chat_v1"
         )
         mycursor = mydb.cursor()
@@ -32,8 +34,8 @@ def sendMessage(userId, toUserId, text):
         mycursor.execute(sql)
         myresult = mycursor.fetchall()
         mydb.close()
-        for x in myresult:
-            msg["msgTime"] = x[0]
+        for resMsg in myresult:
+            msg["msgTime"] = resMsg[0]
             return msg
     except mysql.connector.Error as err:
         print("Something went wrong: {}".format(err))

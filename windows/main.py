@@ -90,7 +90,6 @@ class Main(QWidget):
                 self.chatList = dataRes["data"]["users"]
                 self.isInSearch = True
                 self.namesListWidget.clear()
-                self.chatList.clear
                 for user in self.chatList:
                     self.namesListWidget.addItem(user["name"])
 
